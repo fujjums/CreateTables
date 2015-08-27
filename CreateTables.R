@@ -6,7 +6,7 @@ library(stringr)
 library(tidyr)
 
 setwd("/Users/ShoFarmigo/Dropbox/Farmigo/data/CreateTables")
-Orders <- as.data.frame(read.csv("15-08-20 - Orders (includes closed comms).csv", stringsAsFactors=FALSE))
+Orders <- as.data.frame(read.csv("15-08-27 - Orders (includes closed comms).csv", stringsAsFactors=FALSE))
 DateswithWeeks <- as.data.frame(read.csv("Dates.csv"))
 
 #change dates from strings-> dates
@@ -221,58 +221,3 @@ write.csv(CommunityWeeks, file="toMergeCommunityWeeks.csv", row.names=FALSE, quo
 write.csv(Community, file="toMergeCommunity.csv", row.names=FALSE, quote = FALSE) 
 write.csv(Members, file="toMergeMembers.csv", row.names=FALSE, quote = FALSE) 
 write.csv(Orders, file="toMergeOrders.csv", row.names=FALSE, quote = FALSE) 
-
-
-
-
-
-
-
-
-
-
-
-library(ggvis)
-Members %>% 
-  filter(mem_first_order_week > '2015-01-01') %>%
-  ggvis(~mem_first_pickup, ~count12)  %>% 
-  layer_smooths() %>%
-  scale_numeric("y", domain = c(0, 6), nice = FALSE)
-
-library(ggplot2)
-library(zoo)
-Orders$order_month <- as.Date(as.yearmon(Orders$order_week))
-Orders$order_year <- format(Orders$order_week, format="%Y")
-
-
-
-Orders %>% 
-  filter((order_month == '2015-07-01' |  order_month == '2015-08-01') & Community.Type %in% c('SCHOOL', 'HOME')) %>%
-  ggplot(aes(x=factor(order_week), y=Value)) + geom_boxplot(outlier.shape = NA) + #don't use scale for boxplot! -> scale_y_continuous(limits=c(0, 100)) + 
-  coord_flip() + coord_cartesian(y = c(0,100)) +
-  stat_summary(fun.y=mean, colour="darkred", geom="point", shape=18, size=3,show_guide = FALSE) + 
-  facet_grid(Community.Type ~ Region) 
-
-
-AOV <- Orders %>%
-  filter((order_month == '2015-07-01' |  order_month == '2015-08-01') & Community.Type %in% c('SCHOOL', 'HOME')) %>%
-  transform(Region_Type=interaction(Region, Community.Type,sep='_')) %>%
-  group_by(Region_Type, order_week) %>%
-  summarise(min=min(Value), Q1=quantile(Value, probs=0.25), median = median(Value), mean = mean(Value), Q3=quantile(Value, probs=0.75), max=max(Value))
-
-Orders %>% 
-  filter(order_week == '2015-07-27' & Community.Type == 'HOME' & Region == 'NY') %>%
-  ggplot(aes(x=factor(order_week), y=Value)) + geom_boxplot() +
-  coord_cartesian(y = c(0,100))
-
-
-Orders %>% 
-  filter(order_week == '2015-07-27' & Community.Type == 'HOME' & Region == 'NY') %>%
-  summarise(min=min(Value), Q1=quantile(Value, probs=0.25), median = median(Value), mean = mean(Value), Q3=quantile(Value, probs=0.75), max=max(Value))
-
-
-
-write.csv(AOV, file="AOV(Median_Mean).csv", row.names=FALSE, quote = FALSE) 
-
-
-test <-(Orders %>% filter(is.na(Coupon))
